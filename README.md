@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SentinelIX — Frontend
+
+**API Observability & Incident Management Platform** — a mini Sentry + Better Uptime built to
+help developers detect application errors and endpoint downtime in real time, with automatic
+notifications.
+
+This is the dashboard, built with Next.js App Router. See
+[`sentinelix-backend`](#) for the Go API service this connects to.
+
+## Features
+
+- **Issue dashboard** — browse grouped error issues per project, filter by status
+  (unresolved/resolved/ignored), inspect stack traces and recent events.
+- **Realtime updates** — new issues and monitor status changes stream in live over WebSocket,
+  no manual refresh needed.
+- **Uptime monitoring** — create and manage uptime monitors per project, with a live status chart
+  per monitor.
+- **Alert rules** — configure notification rules (new issue / threshold-based) per project.
+
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 15 (App Router), TypeScript |
+| Data fetching / cache | [TanStack Query](https://tanstack.com/query) |
+| UI components | [shadcn/ui](https://ui.shadcn.com/) |
+| Styling | Tailwind CSS |
+| Realtime | Native WebSocket client (`lib/ws-client.ts`) |
+| Auth | JWT verification at the edge via [`jose`](https://github.com/panva/jose) in `middleware.ts` |
+
+## Project Structure
+
+```
+app/
+  (auth)/            # login, register
+  (dashboard)/        # authenticated dashboard routes
+    projects/[id]/
+      issues/         # issue list & detail
+      monitors/        # uptime monitors
+      alert-rules/      # alert rule management
+  status/[slug]/       # public status page (SSR, no auth)
+components/           # shared UI + feature components
+lib/
+  api-client.ts        # fetch wrapper for the Go backend
+  ws-client.ts          # WebSocket connection hook
+hooks/                 # TanStack Query hooks (issues, monitors, realtime)
+types/                  # shared TypeScript types (kept in sync with backend API)
+middleware.ts           # route protection (verifies JWT via jose)
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- [`sentinelix-backend`](#) running locally (see its README for setup)
+
+### 1. Clone and configure environment
+
+```bash
+git clone <this-repo-url>
+cd sentinelix-frontend
+cp .env.example .env.local
+# edit .env.local — NEXT_PUBLIC_API_URL and JWT_SECRET must match the backend's JWT_SECRET
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dashboard runs on [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Make sure `sentinelix-backend` (`cmd/api` and `cmd/worker`) is running first — the dashboard
+> depends on it for both REST calls and the WebSocket connection.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Status
 
-## Learn More
+Actively developed as a portfolio project. Core dashboard flows complete: auth, project
+management, issue list & detail with realtime updates, alert rule management, and uptime
+monitoring with live charts. Public status page SEO polish in progress.
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

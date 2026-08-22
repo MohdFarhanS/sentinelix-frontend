@@ -76,7 +76,7 @@ export default function MonitorsPage() {
 
             {selectedMonitor && (
                 <div className="space-y-2 rounded-md border bg-card p-4">
-                    <p className="truncate text-sm font-medium">{selectedMonitor.url}</p>
+                    <p className="truncate text-sm font-medium">{selectedMonitor.name || selectedMonitor.url}</p>
                     <UptimeChart checks={checksData?.data ?? []} />
                 </div>
             )}

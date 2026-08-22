@@ -56,6 +56,7 @@ export type Monitor = {
     id: string;
     project_id: string;
     url: string;
+    name: string;
     interval_sec: number;
     channel: MonitorChannel;
     channel_target: string;
@@ -82,6 +83,7 @@ export type MonitorCheckListResponse = {
 
 export type CreateMonitorInput = {
     url: string;
+    name?: string;
     interval_sec: number;
     channel: MonitorChannel;
     channel_target: string;

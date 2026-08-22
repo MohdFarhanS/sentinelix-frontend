@@ -21,6 +21,7 @@ export function CreateMonitorForm({
     projectId: string;
     onCreated?: () => void;
 }) {
+    const [name, setName] = useState("");
     const [url, setUrl] = useState("");
     const [intervalSec, setIntervalSec] = useState(60);
     const [channel, setChannel] = useState<MonitorChannel>("email");
@@ -36,6 +37,7 @@ export function CreateMonitorForm({
         mutate(
             {
                 url,
+                name: name || undefined,
                 interval_sec: intervalSec,
                 channel,
                 channel_target: channelTarget,
@@ -43,6 +45,7 @@ export function CreateMonitorForm({
             },
             {
                 onSuccess: () => {
+                    setName("");
                     setUrl("");
                     setChannelTarget("");
                     onCreated?.();
@@ -57,6 +60,16 @@ export function CreateMonitorForm({
     return (
         <form onSubmit={handleSubmit} className="space-y-4 rounded-md border bg-card p-4">
             <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="name">Name (optional)</Label>
+                    <Input
+                        id="name"
+                        type="text"
+                        placeholder="API Health"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+                </div>
                 <div className="space-y-1.5 sm:col-span-2">
                     <Label htmlFor="url">URL</Label>
                     <Input

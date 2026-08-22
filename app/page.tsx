@@ -1,69 +1,110 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type FeedLine = {
+    bracket: "on" | "off";
+    text: string;
+    tone: "accent" | "danger" | "muted";
+};
+
+const FEED_LINES: FeedLine[] = [
+    { bracket: "on", tone: "accent", text: "TypeError: Cannot read property id of undefined" },
+    { bracket: "on", tone: "danger", text: "500 /api/checkout — 12 events in 4m" },
+    { bracket: "off", tone: "muted", text: "ECONNREFUSED payments.internal:5432" },
+    { bracket: "on", tone: "accent", text: "monitor api.newsportal.id — 3 failures" },
+];
+
+const toneClass: Record<FeedLine["tone"], string> = {
+    accent: "text-primary",
+    danger: "text-destructive",
+    muted: "text-muted-foreground",
+};
+
+function LiveFeed() {
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  useEffect(() => {
+      if (visibleCount >= FEED_LINES.length) return;
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      // delay=0 untuk reduced-motion — semua baris tetap muncul lewat
+      // setTimeout yang sama (async), BUKAN dipanggil sinkron di body
+      // effect. Ini yang bikin lint react-hooks/set-state-in-effect
+      // lolos: setState harus terjadi di callback async, tidak pernah
+      // langsung di body effect.
+      const delay = prefersReducedMotion ? 0 : 700;
+
+      const timer = setTimeout(() => setVisibleCount((c) => c + 1), delay);
+      return () => clearTimeout(timer);
+  }, [visibleCount]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      <div className="rounded-lg border bg-card px-4 py-3.5">
+          <div className="flex flex-col gap-2 font-mono text-xs">
+              {FEED_LINES.slice(0, visibleCount).map((line, i) => (
+                  <div key={i} className="flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-1 duration-500">
+                      <span
+                          className={cn(
+                              "sentinel-bracket shrink-0",
+                              line.bracket === "on" ? "sentinel-bracket--on" : "sentinel-bracket--off"
+                          )}
+                      >
+                          {line.bracket === "on" ? "[●]" : "[ ]"}
+                      </span>
+                      <span className={cn(toneClass[line.tone])}>{line.text}</span>
+                  </div>
+              ))}
+          </div>
+      </div>
   );
+}
+
+export default function LandingPage() {
+    return (
+        <div className="flex min-h-screen flex-col">
+            <header className="sentinel-scanline border-b px-6 py-4">
+                <div className="mx-auto flex max-w-3xl items-center justify-between">
+                    <span className="font-mono text-sm font-medium tracking-tight">sentinelix</span>
+                    <span className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        status: operational
+                    </span>
+                </div>
+            </header>
+
+            <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-16">
+                <h1 className="text-3xl font-medium leading-tight sm:text-4xl">
+                    Catch errors before
+                    <br />
+                    your users do.
+                </h1>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                    Error monitoring and uptime tracking for small teams who don&apos;t
+                    need a $26/month bill just to know when production breaks.
+                </p>
+
+                <div className="mt-6 flex gap-2.5">
+                    <Link href="/login" className={buttonVariants()}>
+                        Get started
+                    </Link>
+                    <Link
+                        href="https://github.com/MohdFarhanS/sentinelix-backend"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({ variant: "outline" })}
+                    >
+                        View on GitHub
+                    </Link>
+                </div>
+
+                <div className="mt-10 max-w-md">
+                    <LiveFeed />
+                </div>
+            </main>
+        </div>
+    );
 }

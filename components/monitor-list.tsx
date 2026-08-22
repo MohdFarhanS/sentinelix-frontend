@@ -50,7 +50,7 @@ export function MonitorList({
                             {isUp ? "[●]" : "[ ]"}
                         </span>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium">{monitor.url}</p>
+                            <p className="truncate font-medium">{monitor.name || monitor.url}</p>
                             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                 <span
                                     className={cn(

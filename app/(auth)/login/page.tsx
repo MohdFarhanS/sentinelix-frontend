@@ -8,6 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+// Validasi redirect HARUS relative path (mulai "/", bukan "//" — trik
+// protocol-relative URL yang browser interpretasikan sebagai absolute).
+// Cegah open redirect (CWE-601): tanpa ini, ?redirect=https://evil.com
+// bisa dipakai buat phishing pasca-login-sukses.
+function isSafeRedirect(path: string | null): path is string {
+  return !!path && path.startsWith("/") && !path.startsWith("//");
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,7 +33,11 @@ function LoginForm() {
 
     try {
       await apiClient.post("/auth/login", { email, password });
-      const redirectTo = searchParams.get("redirect") ?? "/projects";
+
+      // Redirect HANYA setelah login benar-benar sukses — dan HANYA ke
+      // path relative yang aman (lihat isSafeRedirect di atas).
+      const rawRedirect = searchParams.get("redirect");
+      const redirectTo = isSafeRedirect(rawRedirect) ? rawRedirect : "/projects";
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
